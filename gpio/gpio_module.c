@@ -3,8 +3,6 @@
 #include <linux/module.h>
 #include <linux/io.h>
 #include <linux/uaccess.h>
-//#include <asm/uaccess.h>
-//#include <mach/platform.h>
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Sehee Lee");
@@ -29,7 +27,6 @@ MODULE_INFO(intree, "Y");
 
 volatile unsigned *gpio;
 static char msg[BLOCK_SIZE] = {0};
-//static char mag[80] = {0,};
 
 static int gpio_open(struct inode*, struct file*);
 static ssize_t gpio_read(struct file*, char*, size_t, loff_t*); 
@@ -54,8 +51,6 @@ int init_modules(void)
 	int err;
 
 	printk(KERN_INFO, "Hello Module");
-
-//	try_module_get(THIS_MODULE);
 
 	devno = MKDEV(GPIO_MAJOR, GPIO_MINOR);
 	err = register_chrdev_region(devno, 1, GPIO_DEVICE);
@@ -89,8 +84,8 @@ int init_modules(void)
 
 	gpio = (volatile unsigned int*)map;
 
-//	GPIO_IN(GPIO_LED);
-//	GPIO_OUT(GPIO_LED);
+	GPIO_IN(GPIO_LED);
+	GPIO_OUT(GPIO_LED);
 
 	return 0;
 }
@@ -106,8 +101,6 @@ void cleanup_modules(void)
 		iounmap(gpio);
 	}
 
-//	module_put(THIS_MODULE);
-
 	printk(KERN_INFO "Good-bye module!\n");
 
 	return;
@@ -119,6 +112,7 @@ module_exit(cleanup_modules);
 
 static int gpio_open(struct inode* inode, struct file* file)
 {
+	try_module_get(THIS_MODULE);
 	return 0;
 }
 
@@ -127,7 +121,6 @@ static ssize_t gpio_read(struct file* inode, char* buf, size_t len, loff_t* off)
 	int count;
 	strcat(msg, "from Kernel");
 	count = copy_to_user(buf, msg, strlen(msg)+1);
-	//count = raw_copy_to_user(buf, msg, strlen(msg)+1);
 	return count;
 }
 
@@ -136,9 +129,8 @@ static ssize_t gpio_write(struct file* file, const char* buf, size_t len, loff_t
 	short count;
 	memset(msg, 0, BLOCK_SIZE);
 	count = copy_from_user(msg, buf, len);
-	//count = raw_copy_from_user(msg, buf, len);
 
-//	(!strcmp(msg, "0")) ? GPIO_CLR(GPIO_LED) : GPIO_SET(GPIO_LED);
+	(!strcmp(msg, "0")) ? GPIO_CLR(GPIO_LED) : GPIO_SET(GPIO_LED);
 	printk("GPIO Device write %s(%d)\n", msg, len);
 
 	return count;
@@ -146,6 +138,7 @@ static ssize_t gpio_write(struct file* file, const char* buf, size_t len, loff_t
 static int gpio_close(struct inode* inode, struct file* file)
 {
 
+	module_put(THIS_MODULE);
 	return 0;
 }
 
