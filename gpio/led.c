@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <string.h>
+#include <unistd.h>
 
 int main(int argc, char *argv[])
 {
@@ -17,9 +18,9 @@ int main(int argc, char *argv[])
 		printf("fail to open dev/gpioled\n");
 	}
 
-	write(fd, argv[1], strlen(argv[1]), NULL);
+	write(fd, argv[1], strlen(argv[1]));
 
-	read(fd, buf, strlen(argv[1]), NULL);
+	read(fd, buf, strlen(argv[1]));
 	printf("Read data : %s\n",buf);
 
 	close(fd);
