@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
 	memset(buf, 0, 80);
 
 	printf("GPIO SET : %s\n", argv[1]);
-	fd = open ("dev/gpioled", O_RDWR);
+	fd = open ("/dev/gpioled", O_RDWR);
 	if (fd ==-1){
 		printf("fail to open dev/gpioled\n");
 	}
