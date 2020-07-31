@@ -55,34 +55,39 @@ int init_modules(void)
 
 	printk(KERN_INFO, "Hello Module");
 
-	try_module_get(THIS_MODULE);
+//	try_module_get(THIS_MODULE);
 
 	devno = MKDEV(GPIO_MAJOR, GPIO_MINOR);
-	register_chrdev_region(devno, 1, GPIO_DEVICE);
+	err = register_chrdev_region(devno, 1, GPIO_DEVICE);
 
+	if(err <0){
+		printk("ERROR :Device register\n");
+		return -1;
+	}
 	cdev_init(&gpio_cdev, &gpio_fops);
 
 	gpio_cdev.owner = THIS_MODULE;
-
+	gpio_cdev.ops = &gpio_fops;
 	count = 1;
+
 	err = cdev_add(&gpio_cdev, devno, count);
 	if(err <0){
 		printk("ERROR :Device Add\n");
 		return -1;
 	}
 
-	printk("'mkmod /dev/%s c %d 0'\n", GPIO_DEVICE, GPIO_MAJOR);
+	printk("'mknod /dev/%s c %d 0'\n", GPIO_DEVICE, GPIO_MAJOR);
 	printk("'chmod 666 /dev/%s'\n", GPIO_DEVICE);
 
-//	map = ioremap(GPIO_BASE, GPIO_SIZE);
+	map = ioremap(GPIO_BASE, GPIO_SIZE);
 
-//	if(!map){
-//		printk("ERROR :mapping GPIO memory\n");
-//		iounmap(map);
-//		return -EBUSY;
-//	}
+	if(!map){
+		printk("ERROR :mapping GPIO memory\n");
+		iounmap(map);
+		return -EBUSY;
+	}
 
-//	gpio = (volatile unsigned int*)map;
+	gpio = (volatile unsigned int*)map;
 
 //	GPIO_IN(GPIO_LED);
 //	GPIO_OUT(GPIO_LED);
@@ -97,11 +102,11 @@ void cleanup_modules(void)
 
 	cdev_del(&gpio_cdev);
 
-//	if(gpio){
-//		iounmap(gpio);
-//	}
+	if(gpio){
+		iounmap(gpio);
+	}
 
-	module_put(THIS_MODULE);
+//	module_put(THIS_MODULE);
 
 	printk(KERN_INFO "Good-bye module!\n");
 
